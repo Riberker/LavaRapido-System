@@ -1,0 +1,37 @@
+// Define qual cliente do Prisma será gerado para usar no código Node.js
+generator client {
+  provider = "prisma-client-js" // Gera o Prisma Client com suporte a JavaScript/TypeScript
+}
+
+// Define os dados de conexão com o banco de dados
+datasource db {
+  provider = "postgresql" // Indica que o banco utilizado é PostgreSQL
+  url      = env("DATABASE_URL") // A URL de conexão será lida do arquivo .env
+}
+
+// Define o enum com os tipos de clientes possíveis
+enum TipoCliente {
+  RUA     // Cliente comum, que aparece eventualmente
+  EMPRESA // Cliente recorrente, normalmente com contrato
+}
+
+// Define o enum com os tipos de serviços oferecidos
+enum TipoServico {
+  LAVAGEM_SIMPLES              // R$ 50
+  LAVAGEM_SIMPLES_CERA         // R$ 55
+  LAVAGEM_SIMPLES_POR_BAIXO    // R$ 100
+  LAVAGEM_COMPLETA_MOTOR       // R$ 150
+}
+
+// Define o modelo principal que representa o registro de cada serviço realizado
+model Registro {
+  id           Int          @id @default(autoincrement()) // ID único, gerado automaticamente
+  placa        String                                     // Placa do carro
+  modelo       String                                     // Modelo do carro
+  tipoCliente  TipoCliente                                // Campo obrigatório com enum: RUA ou EMPRESA
+  descricao    TipoServico                                // Campo obrigatório com enum: um dos serviços definidos
+  valor        Float                                      // Valor pago pelo serviço
+  pago         Boolean      @default(false)               // Indica se foi pago ou não
+  ativo        Boolean      @default(true)                // Se está ativo ou não
+  dataHora     DateTime     @default(now())               // Data e hora da criação do registro
+}
