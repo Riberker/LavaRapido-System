@@ -81,18 +81,51 @@ export const criarRegistro = async (req, res) => {
  */
 export const listarRegistros = async (req, res) => {
   try {
-    // Busca todos os registros ordenados por dataHora descendente
+    const { dataInicio, dataFim, status, pago, tipoCliente } = req.query;
+
+    // Monta o filtro para a consulta Prisma
+    const where = {};
+
+    if (tipoCliente && tipoCliente !== "todos") {
+      where.tipoCliente = tipoCliente;
+    }
+
+    // Filtro de dataHora
+    if (dataInicio || dataFim) {
+      where.dataHora = {};
+      if (dataInicio) {
+        // Ajusta para o início do dia em São Paulo
+        const inicio = new Date(`${dataInicio}T00:00:00-03:00`);
+        where.dataHora.gte = inicio;
+      }
+      if (dataFim) {
+        // Ajusta para o final do dia em São Paulo
+        const fim = new Date(`${dataFim}T23:59:59-03:00`);
+        where.dataHora.lte = fim;
+      }
+    }
+
+    // Filtro de status (campo ativo: true/false)
+    if (status && status !== "todos") {
+      where.ativo = status === "ativos";
+    }
+
+    // Filtro de pago (campo pago: true/false)
+    if (pago && pago !== "todos") {
+      if (pago === "pagos") where.pago = true;
+      if (pago === "nao_pagos") where.pago = false;
+    }
+
+    // Busca registros com os filtros aplicados
     const registros = await prisma.registro.findMany({
+      where,
       orderBy: { dataHora: "desc" },
     });
 
-    // Formata a dataHora de cada registro para BRT
     const registrosFormatados = registros.map(formatarDataBRT);
 
-    // Retorna o array de registros formatados
     res.status(200).json(registrosFormatados);
   } catch (err) {
-    // Em caso de erro, loga e retorna erro 500
     console.error("Erro no listarRegistros:", err);
     res
       .status(500)
@@ -139,12 +172,13 @@ export const buscarRegistroPorId = async (req, res) => {
 export const atualizarRegistro = async (req, res) => {
   try {
     const { id } = req.params;
-    const { placa, modelo, tipoCliente, descricao, valor, pago , ativo } = req.body;
+    const { placa, modelo, tipoCliente, descricao, valor, pago, ativo } =
+      req.body;
 
     // Atualiza o registro no banco
     const registroAtualizado = await prisma.registro.update({
       where: { id: parseInt(id) },
-      data: { placa, modelo, tipoCliente, descricao, valor, pago , ativo},
+      data: { placa, modelo, tipoCliente, descricao, valor, pago, ativo },
     });
 
     // Retorna o registro atualizado formatado

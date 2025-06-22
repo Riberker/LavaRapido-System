@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+// Importa React e hooks úteis
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { criarRegistro } from "../services/registroService";
 import { z } from "zod";
 
-// Regex placa: exatamente 7 caracteres alfanuméricos, com pelo menos uma letra e um número
+// Expressão regular para validar a placa (7 caracteres alfanuméricos)
 const placaRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{7}$/;
 
+// Schema de validação com Zod
 const registroSchema = z.object({
   placa: z
     .string()
@@ -21,18 +23,29 @@ const registroSchema = z.object({
 
 function NovoRegistro() {
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Pega o parâmetro cliente da query string (ex.: ?cliente=RUA ou EMPRESA)
+  const queryParams = new URLSearchParams(location.search);
+  const clienteTipo = queryParams.get("cliente") || "";
+
+  // Estado do formulário com valores iniciais
   const [form, setForm] = useState({
     placa: "",
     modelo: "",
-    tipoCliente: "",
+    tipoCliente: clienteTipo,
     descricao: "",
     valor: 0,
     pago: false,
     ativo: true,
   });
 
-  // Calcula o valor conforme serviço selecionado
+  // Atualiza o tipoCliente no form se ele mudar na URL
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, tipoCliente: clienteTipo }));
+  }, [clienteTipo]);
+
+  // Função auxiliar para calcular o valor baseado na descrição do serviço
   function calcularValor(servico) {
     switch (servico) {
       case "LAVAGEM_SIMPLES":
@@ -48,10 +61,12 @@ function NovoRegistro() {
     }
   }
 
+  // Manipula alterações nos inputs
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     let novoValor = type === "checkbox" ? checked : value;
 
+    // Atualiza valor calculado automaticamente ao selecionar um serviço
     if (name === "descricao") {
       const valorCalculado = calcularValor(novoValor);
       setForm((prev) => ({
@@ -59,9 +74,13 @@ function NovoRegistro() {
         descricao: novoValor,
         valor: valorCalculado,
       }));
-    } else if (name === "valor") {
+    } 
+    // Converte para número se o campo for valor
+    else if (name === "valor") {
       setForm((prev) => ({ ...prev, valor: Number(novoValor) }));
-    } else {
+    } 
+    // Atualiza o restante normalmente
+    else {
       setForm((prev) => ({
         ...prev,
         [name]: novoValor,
@@ -69,20 +88,26 @@ function NovoRegistro() {
     }
   }
 
+  // Função para salvar o registro
   async function handleSalvar() {
     try {
-      // Validação com Zod (converter valor para number antes, se necessário)
+      // Força a conversão de valor para número antes de validar
       const formParaValidar = {
         ...form,
         valor: Number(form.valor),
       };
+
+      // Valida com Zod
       registroSchema.parse(formParaValidar);
 
+      // Chama o serviço para salvar o registro
       await criarRegistro(formParaValidar);
-      alert("Registro criado com sucesso!");
+
+      // Redireciona para a página inicial
       navigate("/");
     } catch (error) {
       if (error instanceof z.ZodError) {
+        // Se erro de validação, mostra todos os erros em um alert
         alert(error.errors.map((e) => e.message).join("\n"));
       } else {
         console.error("Erro ao criar registro:", error);
@@ -91,10 +116,12 @@ function NovoRegistro() {
     }
   }
 
+  // Renderização do formulário
   return (
     <div className="p-6 max-w-lg mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Novo Registro</h1>
+        {/* Link para voltar à tela inicial */}
         <Link
           to="/"
           className="inline-block px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
@@ -103,7 +130,9 @@ function NovoRegistro() {
         </Link>
       </div>
 
+      {/* Formulário */}
       <div className="border p-6 rounded shadow space-y-4">
+        {/* Placa */}
         <div>
           <label className="block font-semibold mb-1">Placa:</label>
           <input
@@ -116,6 +145,7 @@ function NovoRegistro() {
           />
         </div>
 
+        {/* Modelo */}
         <div>
           <label className="block font-semibold mb-1">Modelo:</label>
           <input
@@ -127,17 +157,19 @@ function NovoRegistro() {
           />
         </div>
 
+        {/* Tipo Cliente (não editável) */}
         <div>
           <label className="block font-semibold mb-1">Tipo Cliente:</label>
           <input
             type="text"
             name="tipoCliente"
             value={form.tipoCliente}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
+            readOnly
+            className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
           />
         </div>
 
+        {/* Descrição (dropdown) */}
         <div>
           <label className="block font-semibold mb-1">Serviço:</label>
           <select
@@ -149,15 +181,12 @@ function NovoRegistro() {
             <option value="">-- Selecione um serviço --</option>
             <option value="LAVAGEM_SIMPLES">LAVAGEM_SIMPLES</option>
             <option value="LAVAGEM_SIMPLES_CERA">LAVAGEM_SIMPLES_CERA</option>
-            <option value="LAVAGEM_SIMPLES_POR_BAIXO">
-              LAVAGEM_SIMPLES_POR_BAIXO
-            </option>
-            <option value="LAVAGEM_COMPLETA_MOTOR">
-              LAVAGEM_COMPLETA_MOTOR
-            </option>
+            <option value="LAVAGEM_SIMPLES_POR_BAIXO">LAVAGEM_SIMPLES_POR_BAIXO</option>
+            <option value="LAVAGEM_COMPLETA_MOTOR">LAVAGEM_COMPLETA_MOTOR</option>
           </select>
         </div>
 
+        {/* Valor (readonly) */}
         <div>
           <label className="block font-semibold mb-1">Valor:</label>
           <input
@@ -169,6 +198,7 @@ function NovoRegistro() {
           />
         </div>
 
+        {/* Pago (checkbox) */}
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -182,6 +212,7 @@ function NovoRegistro() {
           </label>
         </div>
 
+        {/* Botão para salvar */}
         <button
           onClick={handleSalvar}
           className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
@@ -193,4 +224,5 @@ function NovoRegistro() {
   );
 }
 
+// Exporta o componente
 export default NovoRegistro;

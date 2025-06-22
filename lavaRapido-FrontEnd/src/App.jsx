@@ -7,7 +7,7 @@ import NovoRegistro from "./components/NovoRegistro";
 function App() {
   return (
     <Router>
-      <div className="container mx-auto">
+      <div className="w-[100vw]">
         <Routes>
           <Route path="/" element={<Registros />} />
           <Route path="/registro/:id" element={<RegistroDetalhe />} />

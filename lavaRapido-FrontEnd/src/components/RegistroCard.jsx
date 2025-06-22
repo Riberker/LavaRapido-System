@@ -1,46 +1,56 @@
+// Importa o React e o Link do react-router-dom para navegação de página
 import React from "react";
 import { Link } from "react-router-dom";
 
+// Componente RegistroCard que recebe um único registro como props
 function RegistroCard({ registro }) {
   return (
-    <div className="p-4 border rounded shadow mb-2">
-      <p>
-        <strong> Placa: </strong> {registro.placa}
-      </p>
+    // Cada registro é renderizado como uma linha da tabela
+    <tr className="border-b hover:bg-gray-100">
+      {/* Placa do veículo */}
+      <td className="px-4 py-2 font-medium">{registro.placa}</td>
 
-      <p>
-        <strong> Modelo: </strong> {registro.modelo}
-      </p>
+      {/* Modelo do veículo */}
+      <td className="px-4 py-2 font-medium">{registro.modelo}</td>
 
-      <p>
-        <strong> Serviço: </strong> {registro.descricao}
-      </p>
+      {/* Tipo do cliente (Rua ou Empresa) */}
+      <td className="px-4 py-2 font-medium">{registro.tipoCliente}</td>
 
-      <p>
-        <strong> Valor: </strong> R$ {registro.valor}
-      </p>
+      {/* Descrição do serviço */}
+      <td className="px-4 py-2 font-medium">{registro.descricao}</td>
 
-      <p>
-        <strong> Pago: </strong> {registro.pago ? "Sim" : "Não"}
-      </p>
+      {/* Valor formatado em reais */}
+      <td className="px-4 py-2 font-medium">
+        R$ {registro.valor}
+      </td>
 
-      <p>
-        <strong> Data: </strong>{" "}
-        {new Date(registro.dataHora).toLocaleString("pt-BR")}
-      </p>
+      {/* Campo de pagamento */}
+      <td className="px-4 py-2 font-medium">
+        {registro.pago ? "Sim" : "Não"}
+      </td>
 
-      <p>
-        <strong>Status: </strong> {registro.ativo ? "Ativo" : "Inativo"}
-      </p>
+      {/* Data formatada para o padrão brasileiro */}
+      <td className="px-4 py-2 font-medium">
+        {new Date(registro.dataHora).toLocaleDateString("pt-BR")}
+      </td>
 
-      <Link
-        to={`/registro/${registro.id}`}
-        className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        Ver / Editar Registro
-      </Link>
-    </div>
+      {/* Status: ativo ou inativo */}
+      <td className="px-4 py-2 font-medium">
+        {registro.ativo ? "Ativo" : "Inativo"}
+      </td>
+
+      {/* Botão/link para abrir a tela de detalhes ou edição */}
+      <td className="px-4 py-2 font-medium">
+        <Link
+          to={`/registro/${registro.id}`}
+          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+        >
+          Ver / Editar
+        </Link>
+      </td>
+    </tr>
   );
 }
 
+// Exporta o componente
 export default RegistroCard;
