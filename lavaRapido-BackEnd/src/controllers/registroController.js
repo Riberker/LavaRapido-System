@@ -10,12 +10,25 @@ const prisma = new PrismaClient();
  * com o timezone de São Paulo (America/Sao_Paulo).
  * Recebe um objeto registro e retorna uma cópia dele com dataHora formatada.
  */
+
 const formatarDataBRT = (registro) => {
+  let data = registro.dataHora;
+
+  if (!data) {
+    data = new Date(); // fallback caso venha null
+  } else if (!(data instanceof Date)) {
+    data = new Date(data); // converte string para Date
+  }
+
+  // Se ainda não for válido
+  if (isNaN(data.getTime())) {
+    console.warn("Data inválida no registro:", registro);
+    data = new Date();
+  }
+
   return {
-    ...registro, // mantém todas as outras propriedades do registro
-    dataHora: registro.dataHora.toLocaleString("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-    }), // formata a dataHora
+    ...registro,
+    dataHora: data.toISOString(), // envia string ISO para o front
   };
 };
 
